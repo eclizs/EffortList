@@ -31,9 +31,15 @@ class CsvParsingTests(unittest.TestCase):
 
 class AdminImportTests(AppTestCase):
     def upload_csv(self, contents: str):
+        preview = self.client.post(
+            "/insert_csv/preview",
+            files={"file": ("entries.csv", contents, "text/csv")},
+        )
+        self.assertEqual(preview.status_code, 200, preview.text)
+
         return self.client.post(
             "/insert_csv",
-            files={"file": ("entries.csv", contents, "text/csv")},
+            json={"entries": preview.json()["entries"]},
         )
 
     def test_preview_parses_entries_without_inserting_them(self) -> None:

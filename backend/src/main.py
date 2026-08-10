@@ -3,7 +3,7 @@ import re
 import io
 
 from typing import Annotated
-from fastapi import Form, status, FastAPI, Query, Request, HTTPException, UploadFile, File
+from fastapi import Body, Form, status, FastAPI, Query, Request, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
@@ -197,29 +197,13 @@ async def insert_csv(
     request: Request,
     identity: Identity,
     session: DatabaseSession,
-    column: Annotated[str | None, Form()] = None,
-    file: UploadFile = File(...),
+    entries: Annotated[list[str], Body(embed=True)],
 ):
-    user = None
-
-    user_id = get_user_id(identity)
-    if user_id != -1:
-        result = await session.execute(select(User).where(User.id == get_user_id(identity)))
-        user = result.scalars().first()
-
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User doesn't exists"
-            )
-
-    contents = await file.read()
-
-    if user is None or not user.is_admin:
-        entries = parse_user_csv(contents, column)
-    elif user.is_admin:
-        entries = parse_admin_csv(contents)
-
+    if not entries:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="List is empty"
+        )
     results = {"inserted": [], "failed": []}
     for entry in entries:
         try:
