@@ -53,14 +53,14 @@ export function initEntryActions() {
   const performUpload = async () => {
     if (!pendingUpload) return;
 
-    const { file, column } = pendingUpload;
+    const { entries } = pendingUpload;
     uploadInProgress = true;
     if (confirmUploadButton) confirmUploadButton.disabled = true;
     if (cancelUploadButton) cancelUploadButton.disabled = true;
     setStatus(previewStatus, "Importing entries…");
 
     try {
-      const data = await uploadEntries(file, column);
+      const data = await uploadEntries(entries);
       const insertedCount = data.inserted?.length || 0;
       const failures = Array.isArray(data.failed) ? data.failed : [];
       const failureDetails = failures
@@ -128,7 +128,7 @@ export function initEntryActions() {
       const data = await previewEntries(file, column);
       const entries = Array.isArray(data.entries) ? data.entries : [];
 
-      pendingUpload = { file, column };
+      pendingUpload = { entries };
       renderCsvPreview(entries);
       setStatus(previewStatus, "");
       setStatus(uploadStatus, "");

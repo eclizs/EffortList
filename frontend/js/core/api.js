@@ -82,16 +82,17 @@ function csvFormData(file, column = "") {
   return formData;
 }
 
-export function previewEntries(file, column = "") {
+export function previewEntries(file, column) {
   return request("/insert_csv/preview", {
     method: "POST",
     body: csvFormData(file, column),
   });
 }
 
-export function uploadEntries(file, column = "") {
+export function uploadEntries(entries) {
   return request("/insert_csv", {
     method: "POST",
-    body: csvFormData(file, column),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ entries }),
   });
 }

@@ -70,8 +70,8 @@ function initAuthForm() {
       setStatus(
         status,
         mode === "register"
-          ? "Account created. Opening your dictionary…"
-          : "Logged in. Opening your dictionary…",
+          ? "Account created."
+          : "Logged in.",
         "ok"
       );
       window.location.replace("/");
