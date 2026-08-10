@@ -77,7 +77,7 @@ export function renderResults(words, list, input, onSelect) {
 }
 
 export function selectWord(word, quantityInput, savedList) {
-  const quantity = quantityInput.value ? `${quantityInput.value} ` : "";
+  const quantity = !quantityInput.disabled && quantityInput.value ? `${quantityInput.value} ` : "";
   const saved = savedList.value;
   savedList.value = saved ? `${saved}\n${quantity}${word}` : `${quantity}${word}`;
 }

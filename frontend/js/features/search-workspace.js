@@ -14,6 +14,9 @@ export function initSearchWorkspace() {
   const headerInput = document.getElementById("header-input");
   const resultsList = document.getElementById("results-list-search");
   const searchBox = document.querySelector(".search-box");
+  const searchControls = searchBox?.querySelector(".search-controls");
+  const clearSearchToggle = document.getElementById("clear-search-toggle");
+  const numberInputToggle = document.getElementById("number-input-toggle");
   const clearButton = document.getElementById("clear-btn");
   const copyButton = document.getElementById("copy-btn");
   const saveButton = document.getElementById("save-btn");
@@ -26,15 +29,39 @@ export function initSearchWorkspace() {
 
   let debounceTimer;
   let highlightedIndex = -1;
+  let searchRequestId = 0;
   let header = "";
 
-  const chooseWord = (word) => selectWord(word, numberInput, savedList);
+  const isNumberInputEnabled = () => numberInputToggle?.checked ?? true;
 
-  const runSearch = async (prefix) => {
+  const focusAfterAdding = () => {
+    if (isNumberInputEnabled()) {
+      numberInput.focus();
+    } else {
+      searchInput.focus();
+    }
+  };
+
+  const chooseWord = (word) => {
+    selectWord(word, numberInput, savedList);
+
+    if (clearSearchToggle?.checked) {
+      window.clearTimeout(debounceTimer);
+      searchRequestId += 1;
+      highlightedIndex = -1;
+      searchInput.value = "";
+      closeDropdown(searchInput, resultsList);
+      resultsList.replaceChildren();
+    }
+  };
+
+  const runSearch = async (prefix, requestId) => {
     try {
       const data = await searchEntries(prefix);
+      if (requestId !== searchRequestId) return;
       renderResults(data.words || [], resultsList, searchInput, chooseWord);
     } catch {
+      if (requestId !== searchRequestId) return;
       renderMessage("No matches found", searchInput, resultsList);
     }
   };
@@ -42,20 +69,30 @@ export function initSearchWorkspace() {
   searchInput.addEventListener("input", () => {
     window.clearTimeout(debounceTimer);
     highlightedIndex = -1;
-    debounceTimer = window.setTimeout(() => runSearch(searchInput.value.trim()), 200);
+    const requestId = ++searchRequestId;
+    debounceTimer = window.setTimeout(
+      () => runSearch(searchInput.value.trim(), requestId),
+      200,
+    );
   });
 
   searchInput.addEventListener("keydown", (event) => {
     const items = resultsList.querySelectorAll(".entry-item:not(.is-empty)");
 
-    if (!resultsList.classList.contains("is-open") || items.length === 0) {
-      if (event.key === "Enter" && searchInput.value !== "") {
+    if(event.key === "Enter")
+    {
+      event.preventDefault();
+      if (!resultsList.classList.contains("is-open") || items.length === 0) {
         chooseWord(searchInput.value);
-        numberInput.focus();
+        focusAfterAdding();
+      }
+      else {
+        chooseWord(items[0].dataset.word);
+        focusAfterAdding();
       }
     }
 
-    if (searchInput.value === "" && event.key === "Backspace") {
+    if (searchInput.value === "" && event.key === "Backspace" && isNumberInputEnabled()) {
       event.preventDefault();
       numberInput.focus();
     } else if (event.key === "ArrowDown" || (event.key === "Tab" && !event.shiftKey)) {
@@ -71,10 +108,10 @@ export function initSearchWorkspace() {
         event.preventDefault();
         chooseWord(items[highlightedIndex].dataset.word);
       }
-      numberInput.focus();
+      focusAfterAdding();
     } else if (event.key === "Escape") {
       closeDropdown(searchInput, resultsList);
-      numberInput.focus();
+      focusAfterAdding();
     }
   });
 
@@ -85,6 +122,21 @@ export function initSearchWorkspace() {
     }
   });
 
+  const updateNumberInputVisibility = () => {
+    const enabled = isNumberInputEnabled();
+    numberInput.hidden = !enabled;
+    numberInput.disabled = !enabled;
+    searchControls?.classList.toggle("is-number-disabled", !enabled);
+    searchBox?.classList.toggle("is-number-disabled", !enabled);
+
+    if (!enabled && document.activeElement === numberInput) {
+      searchInput.focus();
+    }
+  };
+
+  numberInputToggle?.addEventListener("change", updateNumberInputVisibility);
+  updateNumberInputVisibility();
+
   document.addEventListener("click", (event) => {
     if (!searchBox?.contains(event.target)) {
       closeDropdown(searchInput, resultsList);
@@ -92,6 +144,8 @@ export function initSearchWorkspace() {
   });
 
   document.addEventListener("dictionary:cleared", () => {
+    window.clearTimeout(debounceTimer);
+    searchRequestId += 1;
     searchInput.value = "";
     closeDropdown(searchInput, resultsList);
     resultsList.replaceChildren();

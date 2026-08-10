@@ -86,7 +86,6 @@
             placeholder="Qty"
             autocomplete="off"
             maxlength="4"
-            inputmode="numeric"
             >
           <input
             id="search-input"
@@ -98,8 +97,18 @@
             role="combobox"
             aria-expanded="false"
             aria-autocomplete="list"
-            aria-controls="results-list"
+            aria-controls="results-list-search"
           >
+        </div>
+        <div class="search-feature-toggles" role="group" aria-label="Search options">
+          <label class="search-feature-toggle" for="clear-search-toggle">
+            <input id="clear-search-toggle" type="checkbox">
+            <span>Clear after adding</span>
+          </label>
+          <label class="search-feature-toggle" for="number-input-toggle">
+            <input id="number-input-toggle" type="checkbox" aria-controls="number-input" checked>
+            <span>Show quantity</span>
+          </label>
         </div>
         <ul class="entry-list" id="results-list-search" role="listbox" aria-live="polite"></ul>
       </div>
@@ -211,6 +220,6 @@
     </div>
   </dialog>
 
-  <script type="module" src="/static/js/pages/dictionary.js?v=3"></script>
+  <script type="module" src="/static/js/pages/dictionary.js"></script>
 </body>
 </html>

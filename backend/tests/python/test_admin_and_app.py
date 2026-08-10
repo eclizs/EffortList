@@ -112,7 +112,7 @@ class ApplicationTests(AppTestCase):
         self.assertIn('id="guide-delete-title"', response.text)
         self.assertIn('data-guide-mode="search"', response.text)
         self.assertIn("Guest session", response.text)
-        self.assertIn("js/pages/dictionary.js?v=3", response.text)
+        self.assertIn("js/pages/dictionary.js", response.text)
         self.assertIn('id="csv-preview-dialog"', response.text)
         self.assertIn('id="confirm-upload-btn"', response.text)
         self.assertIn('id="delete-all-dialog"', response.text)
