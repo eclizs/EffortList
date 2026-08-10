@@ -109,8 +109,6 @@ int insertTrieNode(TrieNode **root, char *signedText)
 	if(strlen(signedText) == 0) return 400;
 	if(!wordIsValid(signedText)) return 422;
 	if(*root == NULL) *root = createTrieNode(false);
-
-	char* original = strdup(signedText);
 	
 	unsigned char *text = (unsigned char*)signedText;
 
@@ -135,7 +133,7 @@ int insertTrieNode(TrieNode **root, char *signedText)
 	else
 	{
 		temp->terminal = true;
-		temp->original = original;
+		temp->original = strdup(signedText);;
 	}
 	
 	return 201;
