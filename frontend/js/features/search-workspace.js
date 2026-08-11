@@ -89,6 +89,7 @@ export function initSearchWorkspace() {
       else {
         chooseWord(items[0].dataset.word);
         focusAfterAdding();
+        closeDropdown(searchInput, resultsList);
       }
     }
 
