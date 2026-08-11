@@ -14,8 +14,7 @@ _MALFORMED_TRAILING_QUOTED_TOKEN = re.compile(r"(?<!\S)(\S+)\"\"$")
 
 def _normalize_csv_entry(value: object) -> str:
     entry = str(value)
-    string = _MALFORMED_TRAILING_QUOTED_TOKEN.sub(r'"\1"', entry)
-    return re.sub(r'"\w+"', "", string)
+    return _MALFORMED_TRAILING_QUOTED_TOKEN.sub(r'"\1"', entry) 
 
 
 async def get_user_by_email(
@@ -64,4 +63,6 @@ def parse_user_csv(contents: bytes, column: str | None) -> list[str]:
 def parse_admin_csv(contents: bytes) -> list[str]:
     df = read_csv(io.BytesIO(contents), header=None)
 
-    return [_normalize_csv_entry(value) for value in df[df.columns[2]]]
+    values = [_normalize_csv_entry(value) for value in df[df.columns[2]]]
+
+    return [re.sub(r'"\w+"', "", value).strip() for value in values]
