@@ -79,20 +79,6 @@ export function initSearchWorkspace() {
   searchInput.addEventListener("keydown", (event) => {
     const items = resultsList.querySelectorAll(".entry-item:not(.is-empty)");
 
-    if(event.key === "Enter")
-    {
-      event.preventDefault();
-      if (!resultsList.classList.contains("is-open") || items.length === 0) {
-        chooseWord(searchInput.value);
-        focusAfterAdding();
-      }
-      else {
-        chooseWord(items[0].dataset.word);
-        focusAfterAdding();
-        closeDropdown(searchInput, resultsList);
-      }
-    }
-
     if (searchInput.value === "" && event.key === "Backspace" && isNumberInputEnabled()) {
       event.preventDefault();
       numberInput.focus();
@@ -105,8 +91,12 @@ export function initSearchWorkspace() {
       highlightedIndex = Math.max(highlightedIndex - 1, 0);
       updateHighlight(items, highlightedIndex);
     } else if (event.key === "Enter") {
+      event.preventDefault();
       if (highlightedIndex >= 0 && items[highlightedIndex]) {
-        event.preventDefault();
+        chooseWord(items[highlightedIndex].dataset.word);
+      }
+      else {
+        highlightedIndex = Math.max(highlightedIndex - 1, 0);
         chooseWord(items[highlightedIndex].dataset.word);
       }
       focusAfterAdding();
