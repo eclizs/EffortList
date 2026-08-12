@@ -4,15 +4,6 @@ from support import AppTestCase
 
 
 class DatabaseTests(AppTestCase):
-    def test_sqlite_foreign_keys_are_enabled(self) -> None:
-        async def read_pragma() -> int:
-            async with self.engine.connect() as connection:
-                result = await connection.exec_driver_sql("PRAGMA foreign_keys")
-                return result.scalar_one()
-
-        enabled = self.client.portal.call(read_pragma)
-        self.assertEqual(enabled, 1)
-
     def test_session_objects_do_not_expire_on_commit(self) -> None:
         self.assertFalse(
             database.AsyncSessionLocal.kw["expire_on_commit"]

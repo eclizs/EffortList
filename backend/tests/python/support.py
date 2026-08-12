@@ -1,9 +1,8 @@
+import asyncio
 import os
-import sqlite3
-import tempfile
 import unittest
 import warnings
-from pathlib import Path
+from uuid import uuid4
 
 warnings.filterwarnings(
     "ignore",
@@ -16,22 +15,41 @@ os.environ.setdefault(
 )
 
 from fastapi.testclient import TestClient
+from sqlalchemy.engine import make_url
+from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from backend.src import database, main
+from backend.src.config import settings
+from backend.src.models import Base
 
 
 class AppTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp_directory = tempfile.TemporaryDirectory()
-        self.database_path = Path(self.temp_directory.name) / "test.db"
+        self.database_url = os.environ.get(
+            "TEST_DATABASE_URL",
+            settings.database_url,
+        )
+        if make_url(self.database_url).get_backend_name() != "postgresql":
+            raise RuntimeError(
+                "Python integration tests require a PostgreSQL database URL"
+            )
+
+        self.schema_name = f"test_{uuid4().hex}"
         self.engine = create_async_engine(
-            f"sqlite+aiosqlite:///{self.database_path}"
+            self.database_url,
+            connect_args={
+                "options": f"-csearch_path={self.schema_name}",
+            },
+            poolclass=NullPool,
         )
         self.session_factory = async_sessionmaker(
             self.engine,
             expire_on_commit=False,
         )
+
+        asyncio.run(self._create_schema())
 
         self.original_engine = main.engine
         self.original_session_factory = database.AsyncSessionLocal
@@ -45,27 +63,50 @@ class AppTestCase(unittest.TestCase):
         self.client.__exit__(None, None, None)
         main.engine = self.original_engine
         database.AsyncSessionLocal = self.original_session_factory
-        self.temp_directory.cleanup()
+        asyncio.run(self._drop_schema())
+
+    async def _create_schema(self) -> None:
+        async with self.engine.begin() as connection:
+            await connection.execute(CreateSchema(self.schema_name))
+            await connection.run_sync(Base.metadata.create_all)
+
+    async def _drop_schema(self) -> None:
+        try:
+            async with self.engine.begin() as connection:
+                await connection.execute(
+                    DropSchema(self.schema_name, cascade=True)
+                )
+        finally:
+            await self.engine.dispose()
+
+    @staticmethod
+    def _postgres_query(query: str) -> str:
+        return query.replace("?", "%s")
 
     def database_rows(
         self,
         query: str,
         parameters: tuple = (),
     ) -> list[tuple]:
-        connection = sqlite3.connect(self.database_path)
-        try:
-            return connection.execute(query, parameters).fetchall()
-        finally:
-            connection.close()
+        async def fetch_rows() -> list[tuple]:
+            async with self.engine.connect() as connection:
+                result = await connection.exec_driver_sql(
+                    self._postgres_query(query),
+                    parameters,
+                )
+                return [tuple(row) for row in result.fetchall()]
+
+        return self.client.portal.call(fetch_rows)
 
     def execute_sql(self, query: str, parameters: tuple = ()) -> None:
-        connection = sqlite3.connect(self.database_path)
-        try:
-            connection.execute("PRAGMA foreign_keys=ON")
-            connection.execute(query, parameters)
-            connection.commit()
-        finally:
-            connection.close()
+        async def execute() -> None:
+            async with self.engine.begin() as connection:
+                await connection.exec_driver_sql(
+                    self._postgres_query(query),
+                    parameters,
+                )
+
+        self.client.portal.call(execute)
 
     def register(
         self,

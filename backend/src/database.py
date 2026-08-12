@@ -1,19 +1,16 @@
 from .models import User, Entry, Base
 
 from sqlalchemy import Engine, event
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
+from .config import settings
 
-DATABASE_URL = "sqlite+aiosqlite:///./entries.db"
+engine = create_async_engine(settings.database_url)
 
-engine = create_async_engine(DATABASE_URL, echo=False)
-
-AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
-
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
 
 async def get_db():
     async with AsyncSessionLocal() as session:

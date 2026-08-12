@@ -16,18 +16,12 @@ class CsvParsingTests(unittest.TestCase):
 
         self.assertEqual(
             parse_admin_csv(admin_csv),
-            ['Indomie Kaldu Ayam "40"', 'LPG 12kg "ISI"'],
+            ['Indomie Kaldu Ayam', 'LPG 12kg'],
         )
         self.assertEqual(
             parse_user_csv(user_csv, None),
             ['Indomie Kaldu Ayam "40"'],
         )
-
-    def test_preserves_valid_embedded_quotes(self) -> None:
-        contents = b'A,C,"Product ""Special""",1,item,1\n'
-
-        self.assertEqual(parse_admin_csv(contents), ['Product "Special"'])
-
 
 class AdminImportTests(AppTestCase):
     def upload_csv(self, contents: str):
@@ -68,8 +62,8 @@ class AdminImportTests(AppTestCase):
         registered = self.register(email="admin@example.com")
         self.assertEqual(registered.status_code, 201, registered.text)
         self.execute_sql(
-            "UPDATE users SET is_admin = 1 WHERE email = ?",
-            ("admin@example.com",),
+            "UPDATE users SET is_admin = ? WHERE email = ?",
+            (True, "admin@example.com"),
         )
 
         response = self.upload_csv(

@@ -12,7 +12,7 @@ class Entry(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    entry: Mapped[str] = mapped_column(String(100, collation="NOCASE")) # case-insensitive
+    entry: Mapped[str] = mapped_column(String(100))
 
     def __repr__(self):
         return f"{self.id}: {self.entry}"

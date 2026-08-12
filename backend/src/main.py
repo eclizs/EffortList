@@ -1,6 +1,5 @@
 import ctypes
 import re
-import io
 
 from typing import Annotated
 from fastapi import Body, Form, status, FastAPI, Query, Request, HTTPException, UploadFile, File
@@ -15,21 +14,19 @@ from .crud import parse_admin_csv, parse_user_csv
 
 from .models import Entry, User
 
-from .database import engine, Base
+from .database import engine
 from .dependencies import DatabaseSession, Identity, get_user_id
 from .routers.users import router
 from .trie_state import discard_root, destroy_trie_state, initialize_trie_state, locked_root
 from .config import settings
 
-from pandas import read_csv
-
 re.ASCII
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
+    # async with engine.begin() as conn:
+    #     await conn.run_sync(Base.metadata.create_all)
+    
     initialize_trie_state(app)
 
     yield

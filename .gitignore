@@ -9,9 +9,10 @@ obj/
 
 .env
 scripts/
+addadmin.py
+*.db
 
 # Test files
-*.db
 *.csv
 temp.py
 
@@ -28,4 +29,3 @@ __pycache__/
 
 # VS Code workspace settings
 .vscode/
-addadmin.py
