@@ -50,6 +50,7 @@ export function initSearchWorkspace() {
       searchRequestId += 1;
       highlightedIndex = -1;
       searchInput.value = "";
+      if(isNumberInputEnabled()) numberInput.value = "";
       closeDropdown(searchInput, resultsList);
       resultsList.replaceChildren();
     }
@@ -95,9 +96,13 @@ export function initSearchWorkspace() {
       if (highlightedIndex >= 0 && items[highlightedIndex]) {
         chooseWord(items[highlightedIndex].dataset.word);
       }
-      else {
+      else if (items.length > 0) {
         highlightedIndex = Math.max(highlightedIndex - 1, 0);
         chooseWord(items[highlightedIndex].dataset.word);
+      }
+      else
+      {
+        chooseWord(searchInput.value);
       }
       focusAfterAdding();
     } else if (event.key === "Escape") {
