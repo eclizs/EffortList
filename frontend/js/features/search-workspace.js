@@ -20,10 +20,15 @@ export function initSearchWorkspace() {
   const clearButton = document.getElementById("clear-btn");
   const copyButton = document.getElementById("copy-btn");
   const saveButton = document.getElementById("save-btn");
+  const previewSaveButton = document.getElementById("preview-save-btn");
+  const downloadButton = document.getElementById("download-btn");
   const headerButton = document.getElementById("headerBtn");
   const savedList = document.getElementById("saved-list");
   const headerText = document.getElementById("header-text");
   const saveStatus = document.getElementById("save-status");
+  const savedBufferDialog = document.getElementById("saved-buffer-dialog");
+  const savedBufferPreview = document.getElementById("saved-buffer-preview");
+  const closeBufferPreviewButton = document.getElementById("close-buffer-preview-btn");
 
   if (!searchInput || !numberInput || !resultsList || !savedList) return;
 
@@ -31,6 +36,7 @@ export function initSearchWorkspace() {
   let highlightedIndex = -1;
   let searchRequestId = 0;
   let header = "";
+  let savedBuffer = null;
 
   const isNumberInputEnabled = () => numberInputToggle?.checked ?? true;
 
@@ -172,12 +178,48 @@ export function initSearchWorkspace() {
       return;
     }
 
-    const blob = new Blob([text], { type: "text/plain" });
+    if (savedBuffer) {
+      savedBuffer.text = `${savedBuffer.text.replace(/\n+$/, "")}\n${text}`;
+    } else {
+      savedBuffer = {
+        filename: header || "saved-words.txt",
+        text,
+      };
+    }
+    setStatus(saveStatus, "Successfully saved the list.", "ok");
+  });
+
+  previewSaveButton?.addEventListener("click", () => {
+    if (!savedBuffer) {
+      setStatus(saveStatus, "Nothing to preview!", "err");
+      return;
+    }
+
+    if (savedBufferPreview) savedBufferPreview.textContent = savedBuffer.text;
+    if (typeof savedBufferDialog?.showModal === "function") {
+      savedBufferDialog.showModal();
+    }
+  });
+
+  closeBufferPreviewButton?.addEventListener("click", () => {
+    savedBufferDialog?.close();
+  });
+
+  downloadButton?.addEventListener("click", () => {
+    if (!savedBuffer) {
+      setStatus(saveStatus, "Nothing to download!", "err");
+      return;
+    }
+
+    const blob = new Blob([savedBuffer.text], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
-    anchor.download = header || "saved-words.txt";
+    anchor.download = savedBuffer.filename;
     anchor.href = url;
     anchor.click();
     URL.revokeObjectURL(url);
+    savedBuffer = null;
+    if (savedBufferPreview) savedBufferPreview.textContent = "";
+    setStatus(saveStatus, "Downloaded successfully.", "ok");
   });
 }

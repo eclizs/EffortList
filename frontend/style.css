@@ -960,6 +960,27 @@
     width: min(calc(100% - 2rem), 560px);
   }
 
+  .saved-buffer-dialog {
+    width: min(calc(100% - 2rem), 560px);
+  }
+
+  .saved-buffer-preview {
+    max-height: min(48vh, 420px);
+    min-height: 120px;
+    margin: 1rem 0 0;
+    padding: 1rem;
+    overflow: auto;
+    color: var(--ink);
+    background: var(--surface-subtle);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
   .csv-preview-list {
     max-height: min(48vh, 420px);
     margin: 1rem 0 0;

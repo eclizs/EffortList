@@ -20,9 +20,9 @@
           <li>Type a prefix to find matching entries.</li>
           <li>Tap a result, or use the arrow keys and Enter, to add it to your list.</li>
           <li>Press Enter without selecting a result from the dropdown to add it immediately to your list unchanged.</li>
-          <li>The counter beside the search bar adds an optional quantity before the selected item.</li>
+          <li>The text box beside the search bar adds an optional quantity before the selected item.</li>
           <li>Press Space or Enter in the counter to move to Search. Press Backspace in an empty Search field to move back to the counter.</li>
-          <li>Edit the saved list, add a header, clear it, copy it, or download it as a file.</li>
+          <li>Edit the saved list and append snapshots to a temporary buffer for preview or download.</li>
         </ul>
       </section>
 
@@ -121,9 +121,11 @@
           
         </div>
         <div class="saved-panel-btns">
-        <button id="clear-btn" class="btn-secondary" type="button">Clear</button>
-        <button id="copy-btn" class="btn-secondary" type="button">Copy to clipboard</button>
-          <button id="save-btn" class="btn-secondary" type="button">Save as file</button>
+          <button id="clear-btn" class="btn-secondary" type="button">Clear</button>
+          <button id="copy-btn" class="btn-secondary" type="button">Copy to clipboard</button>
+          <button id="save-btn" class="btn-secondary" type="button">Save</button>
+          <button id="preview-save-btn" class="btn-secondary" type="button">Preview</button>
+          <button id="download-btn" class="btn-secondary" type="button">Download</button>
           <p class="status-msg" id="save-status" role="status"></p>
         </div>
         
@@ -194,10 +196,18 @@
     </main>
   </div>
 
+  <dialog class="confirm-dialog saved-buffer-dialog" id="saved-buffer-dialog" aria-labelledby="saved-buffer-title" aria-describedby="saved-buffer-description">
+    <h2 id="saved-buffer-title">Saved buffer preview</h2>
+    <pre class="saved-buffer-preview" id="saved-buffer-preview"></pre>
+    <div class="confirm-dialog-actions">
+      <button class="action-btn" id="close-buffer-preview-btn" type="button">Close</button>
+    </div>
+  </dialog>
+
   <dialog class="confirm-dialog csv-preview-dialog" id="csv-preview-dialog" aria-labelledby="csv-preview-title" aria-describedby="csv-preview-description">
     <h2 id="csv-preview-title">Preview CSV import</h2>
     <p id="csv-preview-description">
-      The parser found <strong id="csv-preview-count">0</strong> entries. Review them before inserting.
+      The parser found <strong id="csv-preview-count">0</strong> entries.
     </p>
     <ol class="csv-preview-list" id="csv-preview-list" aria-label="Entries to insert"></ol>
     <p class="status-msg confirm-dialog-status" id="csv-preview-status" role="status" aria-live="polite"></p>

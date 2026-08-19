@@ -111,6 +111,10 @@ class ApplicationTests(AppTestCase):
         self.assertIn('id="confirm-upload-btn"', response.text)
         self.assertIn('id="delete-all-dialog"', response.text)
         self.assertIn('id="confirm-delete-all-btn"', response.text)
+        self.assertIn('id="save-btn"', response.text)
+        self.assertIn('id="preview-save-btn"', response.text)
+        self.assertIn('id="download-btn"', response.text)
+        self.assertIn('id="saved-buffer-dialog"', response.text)
 
         stylesheet = self.client.get("/static/style.css")
         self.assertEqual(stylesheet.status_code, 200)
