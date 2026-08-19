@@ -8,6 +8,8 @@ import {
   updateHighlight,
 } from "../core/ui.js";
 
+const SAVED_PREVIEW_PAGE_SIZE = 200;
+
 async function copyText(text) {
   if (window.isSecureContext && navigator.clipboard?.writeText) {
     try {
@@ -60,6 +62,9 @@ export function initSearchWorkspace() {
   const saveStatus = document.getElementById("save-status");
   const savedBufferDialog = document.getElementById("saved-buffer-dialog");
   const savedBufferPreview = document.getElementById("saved-buffer-preview");
+  const savedBufferPage = document.getElementById("saved-buffer-page");
+  const previousBufferPageButton = document.getElementById("previous-buffer-page-btn");
+  const nextBufferPageButton = document.getElementById("next-buffer-page-btn");
   const closeBufferPreviewButton = document.getElementById("close-buffer-preview-btn");
 
   if (!searchInput || !numberInput || !resultsList || !savedList) return;
@@ -69,6 +74,35 @@ export function initSearchWorkspace() {
   let searchRequestId = 0;
   let header = "";
   let savedBuffer = null;
+  let savedPreviewLines = [];
+  let savedPreviewPage = 0;
+
+  const renderSavedPreviewPage = () => {
+    const pageCount = Math.max(
+      1,
+      Math.ceil(savedPreviewLines.length / SAVED_PREVIEW_PAGE_SIZE),
+    );
+    savedPreviewPage = Math.min(Math.max(savedPreviewPage, 0), pageCount - 1);
+
+    const start = savedPreviewPage * SAVED_PREVIEW_PAGE_SIZE;
+    const end = Math.min(start + SAVED_PREVIEW_PAGE_SIZE, savedPreviewLines.length);
+    if (savedBufferPreview) {
+      savedBufferPreview.value = savedPreviewLines.slice(start, end).join("\n");
+      savedBufferPreview.scrollTop = 0;
+      savedBufferPreview.scrollLeft = 0;
+    }
+    if (savedBufferPage) {
+      savedBufferPage.textContent = savedPreviewLines.length
+        ? `Lines ${start + 1}–${end} of ${savedPreviewLines.length} · Page ${savedPreviewPage + 1} of ${pageCount}`
+        : "No saved lines";
+    }
+    if (previousBufferPageButton) {
+      previousBufferPageButton.disabled = savedPreviewPage === 0;
+    }
+    if (nextBufferPageButton) {
+      nextBufferPageButton.disabled = savedPreviewPage >= pageCount - 1;
+    }
+  };
 
   const isNumberInputEnabled = () => numberInputToggle?.checked ?? true;
 
@@ -236,14 +270,31 @@ export function initSearchWorkspace() {
       return;
     }
 
-    if (savedBufferPreview) savedBufferPreview.textContent = savedBuffer.text;
+    savedPreviewLines = savedBuffer.text.split("\n");
+    savedPreviewPage = 0;
+    renderSavedPreviewPage();
     if (typeof savedBufferDialog?.showModal === "function") {
       savedBufferDialog.showModal();
     }
   });
 
+  previousBufferPageButton?.addEventListener("click", () => {
+    savedPreviewPage -= 1;
+    renderSavedPreviewPage();
+  });
+
+  nextBufferPageButton?.addEventListener("click", () => {
+    savedPreviewPage += 1;
+    renderSavedPreviewPage();
+  });
+
   closeBufferPreviewButton?.addEventListener("click", () => {
     savedBufferDialog?.close();
+  });
+
+  savedBufferDialog?.addEventListener("close", () => {
+    savedPreviewLines = [];
+    if (savedBufferPreview) savedBufferPreview.value = "";
   });
 
   downloadButton?.addEventListener("click", () => {
@@ -260,7 +311,8 @@ export function initSearchWorkspace() {
     anchor.click();
     URL.revokeObjectURL(url);
     savedBuffer = null;
-    if (savedBufferPreview) savedBufferPreview.textContent = "";
+    savedPreviewLines = [];
+    if (savedBufferPreview) savedBufferPreview.value = "";
     setStatus(saveStatus, "Downloaded successfully.", "ok");
   });
 }

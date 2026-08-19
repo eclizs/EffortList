@@ -198,7 +198,12 @@
 
   <dialog class="confirm-dialog saved-buffer-dialog" id="saved-buffer-dialog" aria-labelledby="saved-buffer-title" aria-describedby="saved-buffer-description">
     <h2 id="saved-buffer-title">Saved buffer preview</h2>
-    <pre class="saved-buffer-preview" id="saved-buffer-preview"></pre>
+    <textarea class="saved-buffer-preview" id="saved-buffer-preview" rows="12" wrap="off" readonly aria-label="Saved buffer contents"></textarea>
+    <div class="preview-pagination" aria-label="Saved buffer preview pages">
+      <button class="btn-secondary" id="previous-buffer-page-btn" type="button">Previous</button>
+      <span id="saved-buffer-page" aria-live="polite"></span>
+      <button class="btn-secondary" id="next-buffer-page-btn" type="button">Next</button>
+    </div>
     <div class="confirm-dialog-actions">
       <button class="action-btn" id="close-buffer-preview-btn" type="button">Close</button>
     </div>
@@ -210,6 +215,11 @@
       The parser found <strong id="csv-preview-count">0</strong> entries.
     </p>
     <ol class="csv-preview-list" id="csv-preview-list" aria-label="Entries to insert"></ol>
+    <div class="preview-pagination" aria-label="CSV preview pages">
+      <button class="btn-secondary" id="previous-csv-page-btn" type="button">Previous</button>
+      <span id="csv-preview-page" aria-live="polite"></span>
+      <button class="btn-secondary" id="next-csv-page-btn" type="button">Next</button>
+    </div>
     <p class="status-msg confirm-dialog-status" id="csv-preview-status" role="status" aria-live="polite"></p>
     <div class="confirm-dialog-actions">
       <button class="btn-secondary" id="cancel-upload-btn" type="button">Cancel</button>

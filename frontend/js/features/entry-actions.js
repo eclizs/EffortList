@@ -15,6 +15,8 @@ import {
   updateHighlight,
 } from "../core/ui.js";
 
+const CSV_PREVIEW_PAGE_SIZE = 75;
+
 export function initEntryActions() {
   const addInput = document.getElementById("add-input");
   const fileInput = document.getElementById("file");
@@ -26,6 +28,9 @@ export function initEntryActions() {
   const previewDialog = document.getElementById("csv-preview-dialog");
   const previewCount = document.getElementById("csv-preview-count");
   const previewList = document.getElementById("csv-preview-list");
+  const previewPage = document.getElementById("csv-preview-page");
+  const previousCsvPageButton = document.getElementById("previous-csv-page-btn");
+  const nextCsvPageButton = document.getElementById("next-csv-page-btn");
   const previewStatus = document.getElementById("csv-preview-status");
   const confirmUploadButton = document.getElementById("confirm-upload-btn");
   const cancelUploadButton = document.getElementById("cancel-upload-btn");
@@ -45,6 +50,7 @@ export function initEntryActions() {
   let highlightedIndex = -1;
   let pendingUpload = null;
   let uploadInProgress = false;
+  let csvPreviewPage = 0;
 
   const deleteAllErrorMessage = (error) => {
     return formatError(error.detail, "Could not delete all entries.");
@@ -87,6 +93,7 @@ export function initEntryActions() {
       }
       previewDialog?.close();
       pendingUpload = null;
+      clearCsvPreview();
     } catch (error) {
       setStatus(
         previewStatus,
@@ -100,17 +107,36 @@ export function initEntryActions() {
     }
   };
 
-  const renderCsvPreview = (entries) => {
+  const renderCsvPreview = (entries, requestedPage = 0) => {
     if (previewCount) previewCount.textContent = String(entries.length);
     if (!previewList) return;
 
+    const pageCount = Math.max(1, Math.ceil(entries.length / CSV_PREVIEW_PAGE_SIZE));
+    csvPreviewPage = Math.min(Math.max(requestedPage, 0), pageCount - 1);
+    const start = csvPreviewPage * CSV_PREVIEW_PAGE_SIZE;
+    const end = Math.min(start + CSV_PREVIEW_PAGE_SIZE, entries.length);
     const items = document.createDocumentFragment();
-    for (const entry of entries) {
+    for (const entry of entries.slice(start, end)) {
       const item = document.createElement("li");
       item.textContent = String(entry);
       items.append(item);
     }
     previewList.replaceChildren(items);
+    previewList.scrollTop = 0;
+
+    if (previewPage) {
+      previewPage.textContent = entries.length
+        ? `Entries ${start + 1}–${end} of ${entries.length} · Page ${csvPreviewPage + 1} of ${pageCount}`
+        : "No entries";
+    }
+    if (previousCsvPageButton) previousCsvPageButton.disabled = csvPreviewPage === 0;
+    if (nextCsvPageButton) nextCsvPageButton.disabled = csvPreviewPage >= pageCount - 1;
+  };
+
+  const clearCsvPreview = () => {
+    previewList?.replaceChildren();
+    if (previewPage) previewPage.textContent = "";
+    csvPreviewPage = 0;
   };
 
   uploadButton?.addEventListener("click", async () => {
@@ -140,6 +166,7 @@ export function initEntryActions() {
         await performUpload();
       } else {
         pendingUpload = null;
+        clearCsvPreview();
       }
     } catch (error) {
       pendingUpload = null;
@@ -154,8 +181,17 @@ export function initEntryActions() {
   });
 
   confirmUploadButton?.addEventListener("click", performUpload);
+  previousCsvPageButton?.addEventListener("click", () => {
+    if (!pendingUpload) return;
+    renderCsvPreview(pendingUpload.entries, csvPreviewPage - 1);
+  });
+  nextCsvPageButton?.addEventListener("click", () => {
+    if (!pendingUpload) return;
+    renderCsvPreview(pendingUpload.entries, csvPreviewPage + 1);
+  });
   cancelUploadButton?.addEventListener("click", () => {
     pendingUpload = null;
+    clearCsvPreview();
     previewDialog?.close();
   });
   previewDialog?.addEventListener("cancel", (event) => {
@@ -164,6 +200,7 @@ export function initEntryActions() {
       return;
     }
     pendingUpload = null;
+    clearCsvPreview();
   });
 
   addButton?.addEventListener("click", async () => {

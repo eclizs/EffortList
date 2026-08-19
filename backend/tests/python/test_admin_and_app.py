@@ -115,6 +115,8 @@ class ApplicationTests(AppTestCase):
         self.assertIn('id="preview-save-btn"', response.text)
         self.assertIn('id="download-btn"', response.text)
         self.assertIn('id="saved-buffer-dialog"', response.text)
+        self.assertIn('id="saved-buffer-page"', response.text)
+        self.assertIn('id="csv-preview-page"', response.text)
 
         stylesheet = self.client.get("/static/style.css")
         self.assertEqual(stylesheet.status_code, 200)

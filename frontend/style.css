@@ -911,7 +911,6 @@
 
   .confirm-dialog::backdrop {
     background: rgba(20, 31, 50, 0.48);
-    backdrop-filter: blur(3px);
   }
 
   .confirm-dialog-icon {
@@ -965,6 +964,8 @@
   }
 
   .saved-buffer-preview {
+    display: block;
+    width: 100%;
     max-height: min(48vh, 420px);
     min-height: 120px;
     margin: 1rem 0 0;
@@ -977,8 +978,29 @@
     font-family: var(--font-mono);
     font-size: 0.875rem;
     line-height: 1.6;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
+    resize: none;
+    white-space: pre;
+  }
+
+  .preview-pagination {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+  }
+
+  .preview-pagination .btn-secondary {
+    min-height: 36px;
+    margin: 0;
+    padding: 0.45rem 0.75rem;
+  }
+
+  .preview-pagination span {
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-align: center;
   }
 
   .csv-preview-list {
