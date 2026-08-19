@@ -8,6 +8,38 @@ import {
   updateHighlight,
 } from "../core/ui.js";
 
+async function copyText(text) {
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+    
+    }
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.setAttribute("aria-hidden", "true");
+  textarea.style.position = "fixed";
+  textarea.style.inset = "0 auto auto -9999px";
+  textarea.style.opacity = "0";
+  textarea.style.fontSize = "16px";
+  document.body.append(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  try {
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    textarea.remove();
+  }
+}
+
 export function initSearchWorkspace() {
   const searchInput = document.getElementById("search-input");
   const numberInput = document.getElementById("number-input");
@@ -167,8 +199,17 @@ export function initSearchWorkspace() {
 
   copyButton?.addEventListener("click", async () => {
     const text = `${header ? `${header}\n` : ""}${savedList.value}`;
-    await navigator.clipboard.writeText(text);
-    setStatus(saveStatus, "Copied to clipboard.", "ok");
+    if (!text) {
+      setStatus(saveStatus, "Nothing to copy!", "err");
+      return;
+    }
+
+    const copied = await copyText(text);
+    setStatus(
+      saveStatus,
+      copied ? "Copied to clipboard." : "Could not copy to clipboard.",
+      copied ? "ok" : "err",
+    );
   });
 
   saveButton?.addEventListener("click", () => {
