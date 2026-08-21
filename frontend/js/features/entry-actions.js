@@ -16,6 +16,13 @@ import {
 } from "../core/ui.js";
 
 const CSV_PREVIEW_PAGE_SIZE = 75;
+const FAILURE_DETAILS_PAGE_SIZE = 50;
+const FAILURE_LABELS = {
+  all: "All failures",
+  duplicate: "Duplicates",
+  invalid: "Invalid entries",
+  server_error: "Server errors",
+};
 
 export function initEntryActions() {
   const addInput = document.getElementById("add-input");
@@ -25,6 +32,16 @@ export function initEntryActions() {
   const uploadButton = document.getElementById("upload-btn");
   const addStatus = document.getElementById("add-status");
   const uploadStatus = document.getElementById("upload-status");
+  const viewImportFailuresButton = document.getElementById("view-import-failures-btn");
+  const failureDetailsDialog = document.getElementById("import-failures-dialog");
+  const failureDetailCount = document.getElementById("failure-detail-count");
+  const failureDetailList = document.getElementById("failure-detail-list");
+  const failureDetailPage = document.getElementById("failure-detail-page");
+  const previousFailurePageButton = document.getElementById("previous-failure-page-btn");
+  const nextFailurePageButton = document.getElementById("next-failure-page-btn");
+  const closeFailureDetailsButton = document.getElementById("close-failure-details-btn");
+  const failureFilterButtons = failureDetailsDialog?.querySelectorAll("[data-failure-filter]") || [];
+  const failureCountElements = failureDetailsDialog?.querySelectorAll("[data-failure-count]") || [];
   const previewDialog = document.getElementById("csv-preview-dialog");
   const previewCount = document.getElementById("csv-preview-count");
   const previewList = document.getElementById("csv-preview-list");
@@ -51,33 +68,103 @@ export function initEntryActions() {
   let pendingUpload = null;
   let uploadInProgress = false;
   let csvPreviewPage = 0;
+  let failureDetailsPage = 0;
+  let activeFailureFilter = "all";
+  let importFailures = {
+    all: [],
+    duplicate: [],
+    invalid: [],
+    server_error: [],
+  };
 
   const deleteAllErrorMessage = (error) => {
     return formatError(error.detail, "Could not delete all entries.");
   };
 
-  const parseFailures = (failures) => {
-    const failuresList = {
-      "duplicate": 0,
-      "invalid": 0,
-      "server_error": 0
+  const groupFailures = (failures) => {
+    const groups = {
+      all: [...failures],
+      duplicate: [],
+      invalid: [],
+      server_error: [],
     };
+
     for (const item of failures) {
-      switch (item.status_code) {
+      switch (Number(item.status_code)) {
         case 400:
         case 422:
-          failuresList.invalid++;
+          groups.invalid.push(item);
           break;
         case 409:
-          failuresList.duplicate++;
+          groups.duplicate.push(item);
           break;
         default:
-          failuresList.server_error++;
+          groups.server_error.push(item);
       }
     }
 
-    return failuresList
-  }
+    return groups;
+  };
+
+  const renderFailureDetails = (requestedPage = 0) => {
+    const failures = importFailures[activeFailureFilter] || [];
+    const pageCount = Math.max(
+      1,
+      Math.ceil(failures.length / FAILURE_DETAILS_PAGE_SIZE),
+    );
+    failureDetailsPage = Math.min(Math.max(requestedPage, 0), pageCount - 1);
+    const start = failureDetailsPage * FAILURE_DETAILS_PAGE_SIZE;
+    const end = Math.min(start + FAILURE_DETAILS_PAGE_SIZE, failures.length);
+
+    if (failureDetailList) {
+      const items = document.createDocumentFragment();
+      for (const failure of failures.slice(start, end)) {
+        const item = document.createElement("li");
+        const word = document.createElement("strong");
+        const reason = document.createElement("span");
+        word.textContent = String(failure.word);
+        reason.textContent = `${failure.reason} (HTTP ${failure.status_code})`;
+        item.append(word, reason);
+        items.append(item);
+      }
+      failureDetailList.replaceChildren(items);
+      failureDetailList.scrollTop = 0;
+    }
+
+    if (failureDetailCount) {
+      failureDetailCount.textContent = `${FAILURE_LABELS[activeFailureFilter]}: ${failures.length}`;
+    }
+    if (failureDetailPage) {
+      failureDetailPage.textContent = failures.length
+        ? `Failures ${start + 1}-${end} of ${failures.length} · Page ${failureDetailsPage + 1} of ${pageCount}`
+        : "No failures in this category";
+    }
+    if (previousFailurePageButton) {
+      previousFailurePageButton.disabled = failureDetailsPage === 0;
+    }
+    if (nextFailurePageButton) {
+      nextFailurePageButton.disabled = failureDetailsPage >= pageCount - 1;
+    }
+
+    for (const button of failureFilterButtons) {
+      const selected = button.dataset.failureFilter === activeFailureFilter;
+      button.classList.toggle("is-active", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    }
+  };
+
+  const setImportFailures = (failures) => {
+    importFailures = groupFailures(failures);
+    activeFailureFilter = "all";
+    failureDetailsPage = 0;
+    if (viewImportFailuresButton) {
+      viewImportFailuresButton.hidden = failures.length === 0;
+    }
+    for (const element of failureCountElements) {
+      const category = element.dataset.failureCount;
+      element.textContent = String(importFailures[category]?.length || 0);
+    }
+  };
 
   const performUpload = async () => {
     if (!pendingUpload) return;
@@ -92,36 +179,18 @@ export function initEntryActions() {
       const data = await uploadEntries(entries);
       const insertedCount = data.inserted?.length || 0;
       const failures = Array.isArray(data.failed) ? data.failed : [];
-      const failureDetails = failures
-          .map((item) => `${item.word}: ${item.reason}`)
-          .join("\n");
-      const failuresList = parseFailures(failures);
-      const failuresSummary = `Duplicate entries: ${failuresList.duplicate}\nInvalid entries: ${failuresList.invalid}\nUnexpected Response: ${failuresList.server_error}`
-      console.log(failuresSummary);
+      const groupedFailures = groupFailures(failures);
+      const failuresSummary = failures.length
+        ? `Duplicate entries: ${groupedFailures.duplicate.length}\nInvalid entries: ${groupedFailures.invalid.length}\nServer errors: ${groupedFailures.server_error.length}`
+        : "";
       const summary = `${insertedCount} inserted, ${failures.length} failed.`;
 
-      if(failures.length < 50) {
-        setStatus(
-          uploadStatus,
-          failuresSummary ? `${summary}\n${failuresSummary}` : summary,
-          failures.length ? "err" : "ok"
-        );
-      }
-      else {
-        // const failureDetailsTruncated = failures.slice(0,51)
-        //                             .map((item) => `${item.word}: ${item.reason}`)
-        //                             .join("\n");
-        // setStatus(
-        //   uploadStatus,
-        //   failureDetailsTruncated ? `${summary}\n${failureDetailsTruncated}\nand ${failures.length - 50} more...` : summary,
-        //   failures.length ? "err" : "ok"
-        // );
-        setStatus(
-          uploadStatus,
-          failuresSummary ? `${summary}\n${failuresSummary}` : summary,
-          failures.length ? "err" : "ok"
-        );
-      }
+      setImportFailures(failures);
+      setStatus(
+        uploadStatus,
+        failuresSummary ? `${summary}\n${failuresSummary}` : summary,
+        failures.length ? "err" : "ok",
+      );
       previewDialog?.close();
       pendingUpload = null;
       clearCsvPreview();
@@ -179,6 +248,7 @@ export function initEntryActions() {
     const file = fileInput.files[0];
     const column = columnInput?.value.trim() || "";
     uploadButton.disabled = true;
+    setImportFailures([]);
     setStatus(uploadStatus, "Parsing preview…");
 
     try {
@@ -232,6 +302,33 @@ export function initEntryActions() {
     }
     pendingUpload = null;
     clearCsvPreview();
+  });
+
+  viewImportFailuresButton?.addEventListener("click", () => {
+    activeFailureFilter = "all";
+    renderFailureDetails(0);
+    if (typeof failureDetailsDialog?.showModal === "function") {
+      failureDetailsDialog.showModal();
+    }
+  });
+
+  for (const button of failureFilterButtons) {
+    button.addEventListener("click", () => {
+      activeFailureFilter = button.dataset.failureFilter || "all";
+      renderFailureDetails(0);
+    });
+  }
+
+  previousFailurePageButton?.addEventListener("click", () => {
+    renderFailureDetails(failureDetailsPage - 1);
+  });
+
+  nextFailurePageButton?.addEventListener("click", () => {
+    renderFailureDetails(failureDetailsPage + 1);
+  });
+
+  closeFailureDetailsButton?.addEventListener("click", () => {
+    failureDetailsDialog?.close();
   });
 
   addButton?.addEventListener("click", async () => {

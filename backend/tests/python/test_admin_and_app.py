@@ -118,6 +118,12 @@ class ApplicationTests(AppTestCase):
         self.assertIn('id="saved-buffer-dialog"', response.text)
         self.assertIn('id="saved-buffer-page"', response.text)
         self.assertIn('id="csv-preview-page"', response.text)
+        self.assertIn('id="view-import-failures-btn"', response.text)
+        self.assertIn('id="import-failures-dialog"', response.text)
+        self.assertIn('data-failure-filter="all"', response.text)
+        self.assertIn('data-failure-filter="duplicate"', response.text)
+        self.assertIn('data-failure-filter="invalid"', response.text)
+        self.assertIn('data-failure-filter="server_error"', response.text)
 
         stylesheet = self.client.get("/static/style.css")
         self.assertEqual(stylesheet.status_code, 200)

@@ -1020,8 +1020,70 @@
     width: min(calc(100% - 2rem), 560px);
   }
 
-  .saved-buffer-dialog {
+  .saved-buffer-dialog,
+  .failure-details-dialog {
     width: min(calc(100% - 2rem), 560px);
+  }
+
+  .failure-details-trigger {
+    margin-top: 0.6rem;
+  }
+
+  .failure-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 1rem;
+  }
+
+  .failure-filters .btn-secondary {
+    min-height: 36px;
+    margin: 0;
+    padding: 0.45rem 0.7rem;
+  }
+
+  .failure-filters .btn-secondary.is-active {
+    color: #ffffff;
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .failure-filters span {
+    display: inline-grid;
+    min-width: 1.4rem;
+    min-height: 1.4rem;
+    place-items: center;
+    margin-left: 0.25rem;
+    padding: 0 0.3rem;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  .failure-detail-heading {
+    margin: 1rem 0 -0.4rem;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    font-weight: 750;
+  }
+
+  .failure-detail-list li {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .failure-detail-list strong {
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    font-weight: 750;
+  }
+
+  .failure-detail-list span {
+    overflow-wrap: anywhere;
+    color: var(--danger-deep);
+    font-size: 0.78rem;
   }
 
   .saved-buffer-preview {

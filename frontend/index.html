@@ -19,9 +19,9 @@
         <ul>
           <li>Type a prefix to find matching entries.</li>
           <li>Tap a result, or use the arrow keys and Enter, to add it to your list.</li>
-          <li>Press Enter without selecting a result from the dropdown to add it immediately to your list unchanged.</li>
-          <li>The text box beside the search bar adds an optional quantity before the selected item.</li>
-          <li>Press Space or Enter in the counter to move to Search. Press Backspace in an empty Search field to move back to the counter.</li>
+          <li>Pressing Enter without selecting will select the first result if it exists. Otherwise it appends the input unchanged.</li>
+          <li>The quantity text box beside the search bar adds an optional quantity before the selected item.</li>
+          <li>Press Space or Enter in the quantity text box to move to the search bar. Press Backspace in an empty search bar to move back to the quantity text box.</li>
           <li>Edit the saved list and append snapshots to a temporary buffer for preview or download.</li>
         </ul>
       </section>
@@ -29,9 +29,9 @@
       <section class="feature-guide-section" data-guide-mode="add" aria-labelledby="guide-add-title" hidden>
         <h3 id="guide-add-title"><span aria-hidden="true">02</span> Add</h3>
         <ul>
-          <li>Add one entry directly to your searchable dictionary.</li>
+          <li>Add one entry directly to your dictionary.</li>
           <li>Import many entries from a CSV file.</li>
-          <li>Optionally name the CSV column to parse; otherwise the first column is used.</li>
+          <li>Optionally name the CSV column to parse. Otherwise the first column is used.</li>
           <li>Review every parsed entry in the preview before confirming the import.</li>
         </ul>
       </section>
@@ -161,6 +161,7 @@
           <button id="upload-btn" class="btn-secondary" type="button">Preview Import</button>
         </div>
           <pre class="status-msg" id="upload-status" role="status"></pre>
+          <button id="view-import-failures-btn" class="btn-secondary failure-details-trigger" type="button" hidden>View details</button>
         <div>
             <label class="field-label" for="csv-header-input">Column to parse</label>
             <input
@@ -206,6 +207,27 @@
     </div>
     <div class="confirm-dialog-actions">
       <button class="action-btn" id="close-buffer-preview-btn" type="button">Close</button>
+    </div>
+  </dialog>
+
+  <dialog class="confirm-dialog failure-details-dialog" id="import-failures-dialog" aria-labelledby="import-failures-title" aria-describedby="import-failures-description">
+    <h2 id="import-failures-title">Import failure details</h2>
+    <p id="import-failures-description">View every failure together or filter by category.</p>
+    <div class="failure-filters" role="group" aria-label="Filter import failures">
+      <button class="btn-secondary is-active" type="button" data-failure-filter="all" aria-pressed="true">All <span data-failure-count="all">0</span></button>
+      <button class="btn-secondary" type="button" data-failure-filter="duplicate" aria-pressed="false">Duplicates <span data-failure-count="duplicate">0</span></button>
+      <button class="btn-secondary" type="button" data-failure-filter="invalid" aria-pressed="false">Invalids <span data-failure-count="invalid">0</span></button>
+      <button class="btn-secondary" type="button" data-failure-filter="server_error" aria-pressed="false">Server errors <span data-failure-count="server_error">0</span></button>
+    </div>
+    <p class="failure-detail-heading" id="failure-detail-count" aria-live="polite"></p>
+    <ol class="csv-preview-list failure-detail-list" id="failure-detail-list" aria-label="Failed import entries"></ol>
+    <div class="preview-pagination" aria-label="Failure detail pages">
+      <button class="btn-secondary" id="previous-failure-page-btn" type="button">Previous</button>
+      <span id="failure-detail-page" aria-live="polite"></span>
+      <button class="btn-secondary" id="next-failure-page-btn" type="button">Next</button>
+    </div>
+    <div class="confirm-dialog-actions">
+      <button class="action-btn" id="close-failure-details-btn" type="button">Close</button>
     </div>
   </dialog>
 
