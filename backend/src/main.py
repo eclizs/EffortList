@@ -118,7 +118,7 @@ async def insert_word(
                 await session.rollback()
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail=f"'{word}' already exists"
+                    detail=f"this word already exists"
                 )
             except SQLAlchemyError:
                 await session.rollback()
@@ -139,7 +139,7 @@ async def insert_word(
                     discard_root(request.app, identity)
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Could not save word"
+                        detail="Unexpected response from server"
                     )
         else:
             result = insertTrieNode(ctypes.byref(root), c_word)
@@ -207,7 +207,7 @@ async def insert_csv(
             await insert_word(request, identity, session, entry)
             results["inserted"].append(entry)
         except HTTPException as e:
-            results["failed"].append({"word": entry, "reason": e.detail})
+            results["failed"].append({"word": entry, "reason": e.detail, "status_code": e.status_code})
 
     return results
 

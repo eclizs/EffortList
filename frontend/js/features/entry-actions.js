@@ -56,6 +56,29 @@ export function initEntryActions() {
     return formatError(error.detail, "Could not delete all entries.");
   };
 
+  const parseFailures = (failures) => {
+    const failuresList = {
+      "duplicate": 0,
+      "invalid": 0,
+      "server_error": 0
+    };
+    for (const item of failures) {
+      switch (item.status_code) {
+        case 400:
+        case 422:
+          failuresList.invalid++;
+          break;
+        case 409:
+          failuresList.duplicate++;
+          break;
+        default:
+          failuresList.server_error++;
+      }
+    }
+
+    return failuresList
+  }
+
   const performUpload = async () => {
     if (!pendingUpload) return;
 
@@ -72,22 +95,30 @@ export function initEntryActions() {
       const failureDetails = failures
           .map((item) => `${item.word}: ${item.reason}`)
           .join("\n");
+      const failuresList = parseFailures(failures);
+      const failuresSummary = `Duplicate entries: ${failuresList.duplicate}\nInvalid entries: ${failuresList.invalid}\nUnexpected Response: ${failuresList.server_error}`
+      console.log(failuresSummary);
       const summary = `${insertedCount} inserted, ${failures.length} failed.`;
 
       if(failures.length < 50) {
         setStatus(
           uploadStatus,
-          failureDetails ? `${summary}\n${failureDetails}` : summary,
+          failuresSummary ? `${summary}\n${failuresSummary}` : summary,
           failures.length ? "err" : "ok"
         );
       }
       else {
-        const failureDetailsTruncated = failures.slice(0,51)
-                                    .map((item) => `${item.word}: ${item.reason}`)
-                                    .join("\n");
+        // const failureDetailsTruncated = failures.slice(0,51)
+        //                             .map((item) => `${item.word}: ${item.reason}`)
+        //                             .join("\n");
+        // setStatus(
+        //   uploadStatus,
+        //   failureDetailsTruncated ? `${summary}\n${failureDetailsTruncated}\nand ${failures.length - 50} more...` : summary,
+        //   failures.length ? "err" : "ok"
+        // );
         setStatus(
           uploadStatus,
-          failureDetailsTruncated ? `${summary}\n${failureDetailsTruncated}\nand ${failures.length - 50} more...` : summary,
+          failuresSummary ? `${summary}\n${failuresSummary}` : summary,
           failures.length ? "err" : "ok"
         );
       }
@@ -126,7 +157,7 @@ export function initEntryActions() {
 
     if (previewPage) {
       previewPage.textContent = entries.length
-        ? `Entries ${start + 1}–${end} of ${entries.length} · Page ${csvPreviewPage + 1} of ${pageCount}`
+        ? `Entries ${start + 1}-${end} of ${entries.length} · Page ${csvPreviewPage + 1} of ${pageCount}`
         : "No entries";
     }
     if (previousCsvPageButton) previousCsvPageButton.disabled = csvPreviewPage === 0;
@@ -158,7 +189,7 @@ export function initEntryActions() {
       renderCsvPreview(entries);
       setStatus(previewStatus, "");
       setStatus(uploadStatus, "");
-      if (confirmUploadButton) confirmUploadButton.disabled = entries.length === 0;
+      if (confirmUploadButton) confirmUploadButton.disabled = (entries.length === 0);
 
       if (typeof previewDialog?.showModal === "function") {
         previewDialog.showModal();
