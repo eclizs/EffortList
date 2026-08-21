@@ -205,6 +205,12 @@ export function initSearchWorkspace() {
   numberInputToggle?.addEventListener("change", updateNumberInputVisibility);
   updateNumberInputVisibility();
 
+  document.addEventListener("keydown", (event) => {
+    if(event.key === "c" && event.altKey) {
+      clearSearchToggle.checked = clearSearchToggle.checked ? false : true;
+    }
+  });
+  
   document.addEventListener("click", (event) => {
     if (!searchBox?.contains(event.target)) {
       closeDropdown(searchInput, resultsList);
