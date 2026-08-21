@@ -143,6 +143,20 @@ class ApplicationTests(AppTestCase):
                 self.assertEqual(script.status_code, 200)
                 self.assertIn("javascript", script.headers["content-type"])
 
+    def test_unknown_pages_use_custom_404_without_changing_api_errors(self) -> None:
+        response = self.client.get("/missing-page")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertIn("text/html", response.headers["content-type"])
+        self.assertIn("<title>Page not found · EffortList</title>", response.text)
+        self.assertIn('id="not-found-title"', response.text)
+        self.assertIn('href="/">Back to EffortList</a>', response.text)
+
+        api_response = self.client.get("/search")
+        self.assertEqual(api_response.status_code, 404)
+        self.assertIn("application/json", api_response.headers["content-type"])
+        self.assertEqual(api_response.json(), {"detail": "No matches found"})
+
     def test_hidden_admin_route_is_not_in_openapi(self) -> None:
         paths = main.app.openapi()["paths"]
         self.assertNotIn("/insert_csv", paths)

@@ -323,3 +323,11 @@ async def delete_all(
             destroy_trie_node(ctypes.byref(root))
 
     return {"message": "Deleted all entries"}
+
+
+@app.get("/{path:path}", include_in_schema=False)
+async def not_found_page(path: str):
+    return FileResponse(
+        "frontend/404.html",
+        status_code=status.HTTP_404_NOT_FOUND,
+    )

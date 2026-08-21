@@ -894,6 +894,67 @@
     text-underline-offset: 3px;
   }
 
+  /* Not-found page */
+  .not-found-page {
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+  }
+
+  .not-found-shell {
+    width: min(100%, 560px);
+    margin: auto;
+  }
+
+  .not-found-brand {
+    width: max-content;
+    margin: 0 auto 1rem;
+  }
+
+  .not-found-card {
+    position: relative;
+    padding: clamp(2rem, 8vw, 3.5rem);
+    overflow: hidden;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(220, 226, 234, 0.95);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+  }
+
+  .not-found-code {
+    margin: 0 0 -0.45rem;
+    color: var(--accent-soft);
+    font-family: var(--font-mono);
+    font-size: clamp(5rem, 25vw, 8.5rem);
+    font-weight: 850;
+    line-height: 0.9;
+    letter-spacing: -0.08em;
+    user-select: none;
+  }
+
+  .not-found-card h1 {
+    margin: 0;
+    font-size: clamp(1.75rem, 7vw, 2.35rem);
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+  }
+
+  .not-found-copy {
+    max-width: 36ch;
+    margin: 0.75rem auto 0;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .not-found-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.5rem;
+    text-decoration: none;
+  }
+
   /* Destructive confirmation */
   .confirm-dialog {
     width: min(calc(100% - 2rem), 430px);
