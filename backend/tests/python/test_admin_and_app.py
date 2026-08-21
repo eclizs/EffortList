@@ -80,7 +80,8 @@ class AdminImportTests(AppTestCase):
                 "failed": [
                     {
                         "word": "Imported Apple",
-                        "reason": "'Imported Apple' already exists",
+                        "reason": "this word already exists",
+                        "status_code": 409
                     }
                 ],
             },
