@@ -61,6 +61,17 @@ async def login_page():
 async def register_page():
     return FileResponse("frontend/register.html")
 
+
+@app.get("/forgot-password", include_in_schema=False)
+async def forgot_password_page():
+    return FileResponse("frontend/forgot-password.html")
+
+
+@app.get("/reset-password", include_in_schema=False)
+async def reset_password_page():
+    return FileResponse("frontend/reset-password.html")
+
+
 @app.get("/search")
 async def search_word(
     request: Request,

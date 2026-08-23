@@ -310,6 +310,7 @@
   .account-link:focus-visible,
   .auth-back:focus-visible,
   .auth-switch a:focus-visible,
+  .auth-help a:focus-visible,
   .password-toggle:focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 2px;
@@ -860,6 +861,23 @@
     margin: 0.4rem 0 0;
     color: var(--ink-faint);
     font-size: 0.75rem;
+  }
+
+  .auth-help {
+    margin: 0.45rem 0 0;
+    font-size: 0.78rem;
+    text-align: right;
+  }
+
+  .auth-help a {
+    color: var(--accent-deep);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .auth-help a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   .auth-submit {

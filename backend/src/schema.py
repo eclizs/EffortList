@@ -10,6 +10,17 @@ class UserCreate(UserBase):
 
 class UserLogin(UserBase):
     password: str = Field(min_length=1, max_length=100)
+
+
+class PasswordResetRequest(UserBase):
+    pass
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(min_length=1, max_length=1000)
+    password: str = Field(min_length=8, max_length=100)
+
+
 class UserRead(UserBase):
     model_config = ConfigDict(from_attributes=True)
 

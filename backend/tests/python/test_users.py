@@ -129,6 +129,70 @@ class LoginAndSessionTests(AppTestCase):
         self.assertTrue(self.identity_with_prefix("guest:").startswith("guest:"))
 
 
+class PasswordResetTests(AppTestCase):
+    def test_reset_request_does_not_reveal_whether_account_exists(self) -> None:
+        expected = {
+            "message": "If an account exists for that email, a password reset link has been sent."
+        }
+
+        with patch(
+            "backend.src.routers.users.send_password_reset_email",
+            new=AsyncMock(),
+        ) as send_email:
+            unknown = self.client.post(
+                "/users/password-reset/request",
+                json={"email": "unknown@example.com"},
+            )
+
+        self.assertEqual(unknown.status_code, 202)
+        self.assertEqual(unknown.json(), expected)
+        send_email.assert_not_awaited()
+
+    def test_reset_link_changes_password_and_can_only_be_used_once(self) -> None:
+        self.assertEqual(self.register().status_code, 201)
+
+        with patch(
+            "backend.src.routers.users.send_password_reset_email",
+            new=AsyncMock(),
+        ) as send_email:
+            requested = self.client.post(
+                "/users/password-reset/request",
+                json={"email": "USER@example.com"},
+            )
+
+        self.assertEqual(requested.status_code, 202)
+        send_email.assert_awaited_once()
+        self.assertEqual(send_email.await_args.args[0], "user@example.com")
+        token = send_email.await_args.args[1]
+
+        reset = self.client.post(
+            "/users/password-reset/confirm",
+            json={"token": token, "password": "new-password-123"},
+        )
+        self.assertEqual(reset.status_code, 200, reset.text)
+        self.assertEqual(self.client.get("/users/me").status_code, 401)
+        self.assertEqual(self.login().status_code, 401)
+        self.assertEqual(self.login(password="new-password-123").status_code, 200)
+
+        reused = self.client.post(
+            "/users/password-reset/confirm",
+            json={"token": token, "password": "another-password-123"},
+        )
+        self.assertEqual(reused.status_code, 400)
+
+    def test_invalid_reset_token_is_rejected(self) -> None:
+        response = self.client.post(
+            "/users/password-reset/confirm",
+            json={"token": "not-a-valid-token", "password": "new-password-123"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["detail"],
+            "This password reset link is invalid or has expired",
+        )
+
+
 if __name__ == "__main__":
     import unittest
 

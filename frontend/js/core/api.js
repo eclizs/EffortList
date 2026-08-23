@@ -50,6 +50,22 @@ export function authenticate(mode, email, password) {
   });
 }
 
+export function requestPasswordReset(email) {
+  return request("/users/password-reset/request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(token, password) {
+  return request("/users/password-reset/confirm", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+}
+
 export function logout() {
   return request("/users/logout", { method: "POST" });
 }
