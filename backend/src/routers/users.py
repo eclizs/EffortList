@@ -1,4 +1,3 @@
-import ctypes
 from datetime import UTC, datetime
 import logging
 from typing import Annotated
@@ -33,7 +32,7 @@ from ..schema import (
     UserLogin,
     UserRead,
 )
-from ..trie_state import discard_root, get_trie_words, locked_root
+from ..trie_state import discard_root, get_root_lock, get_trie_words, locked_root
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -197,12 +196,9 @@ async def read_current_user(current_user: Annotated[User, Depends(get_current_us
 async def logout(
     request: Request,
     identity: Identity,
-    session: DatabaseSession,
 ) -> Response:
-    destroy_trie_node = request.app.state.functions["destroyTrieNode"]
-
-    async with locked_root(request, identity, session) as root:
-        destroy_trie_node(ctypes.byref(root))
+    async with get_root_lock(request.app, identity):
+        discard_root(request.app, identity)
 
     request.session.clear()
 

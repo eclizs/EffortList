@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from backend.src import main
 from backend.src.init import create_trie_root, init_trie
+from backend.src.routers.users import logout
 from backend.src.trie_state import (
     discard_root,
     get_root_lock,
@@ -106,6 +107,22 @@ class AuthenticatedTrieRouteTests(AppTestCase):
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json(), {"words": ["Persistent Item"]})
 
+    def test_entries_repopulate_after_logout_and_login(self) -> None:
+        self.assertEqual(self.register().status_code, 201)
+        self.assertEqual(
+            self.client.post("/insert", params={"word": "Welcome Back"}).status_code,
+            200,
+        )
+        identity = self.identity_with_prefix("user:")
+
+        self.assertEqual(self.client.post("/users/logout").status_code, 204)
+        self.assertNotIn(identity, main.app.state.roots)
+        self.assertEqual(self.login().status_code, 200)
+
+        response = self.client.get("/search", params={"prefix": "welcome"})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json(), {"words": ["Welcome Back"]})
+
     def test_authenticated_duplicates_and_deletes_are_case_insensitive(self) -> None:
         self.assertEqual(self.register().status_code, 201)
         self.assertEqual(
@@ -190,6 +207,24 @@ class TrieStateTests(unittest.TestCase):
             self.assertTrue(entered.is_set())
 
         asyncio.run(check_serialization())
+
+    def test_logout_discards_the_users_root(self) -> None:
+        identity = "user:1"
+        root = create_trie_root()
+        self.app.state.roots[identity] = root
+        insert = self.functions["insertTrieNode"]
+        word = ctypes.create_string_buffer(b"Persistent Item")
+        self.assertEqual(insert(ctypes.byref(root), word), 201)
+        request = SimpleNamespace(
+            app=self.app,
+            session={"identity": identity},
+        )
+
+        response = asyncio.run(logout(request, identity))
+
+        self.assertEqual(response.status_code, 204)
+        self.assertNotIn(identity, self.app.state.roots)
+        self.assertEqual(request.session, {})
 
 
 if __name__ == "__main__":
