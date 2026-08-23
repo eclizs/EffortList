@@ -1,6 +1,6 @@
-from collections.abc import Iterable
 import io
 import re
+from collections.abc import Iterable
 
 from pandas import read_csv
 from sqlalchemy import func, select
@@ -14,7 +14,7 @@ _MALFORMED_TRAILING_QUOTED_TOKEN = re.compile(r"(?<!\S)(\S+)\"\"$")
 
 def _normalize_csv_entry(value: object) -> str:
     entry = str(value)
-    return _MALFORMED_TRAILING_QUOTED_TOKEN.sub(r'"\1"', entry) 
+    return _MALFORMED_TRAILING_QUOTED_TOKEN.sub(r'"\1"', entry)
 
 
 async def get_user_by_email(
@@ -51,14 +51,13 @@ async def create_user_with_entries(
     await session.commit()
     return user
 
+
 def parse_user_csv(contents: bytes, column: str | None) -> list[str]:
     df = read_csv(io.BytesIO(contents))
-    if not column:
-        values = df.iloc[:, 0]
-    else:
-        values = df[column]
+    values = df[column] if column else df.iloc[:, 0]
 
     return [_normalize_csv_entry(value) for value in values]
+
 
 def parse_admin_csv(contents: bytes) -> list[str]:
     df = read_csv(io.BytesIO(contents), header=None)

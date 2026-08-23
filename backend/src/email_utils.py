@@ -6,6 +6,7 @@ import aiosmtplib
 
 from .config import settings
 
+
 async def send_email(
     to_email: str,
     subject: str,
@@ -39,6 +40,7 @@ async def send_password_reset_email(to_email: str, token: str) -> None:
         f"{urlencode({'token': token})}"
     )
     expiration = settings.reset_token_expire_minutes
+    escaped_reset_url = escape(reset_url, quote=True)
 
     await send_email(
         to_email=to_email,
@@ -78,7 +80,7 @@ async def send_password_reset_email(to_email: str, token: str) -> None:
             '<table role="presentation" cellpadding="0" cellspacing="0" '
             'style="border-collapse:separate;"><tr><td style="background-color:#315fbd;'
             'border-radius:10px;">'
-            f'<a href="{escape(reset_url, quote=True)}" style="display:inline-block;'
+            f'<a href="{escaped_reset_url}" style="display:inline-block;'
             'padding:13px 22px;color:#ffffff;font-size:16px;font-weight:700;'
             'text-decoration:none;border-radius:10px;">Reset password</a>'
             "</td></tr></table>"
@@ -90,7 +92,7 @@ async def send_password_reset_email(to_email: str, token: str) -> None:
             '<p style="margin:0 0 8px;color:#98a2b3;font-size:12px;line-height:1.5;">'
             "If the button does not work, copy and paste this link into your browser:"
             "</p>"
-            f'<a href="{escape(reset_url, quote=True)}" style="color:#315fbd;'
+            f'<a href="{escaped_reset_url}" style="color:#315fbd;'
             'font-size:12px;line-height:1.5;overflow-wrap:anywhere;word-break:break-all;">'
             f"{escape(reset_url)}</a>"
             "</td></tr></table>"

@@ -21,6 +21,28 @@ export function setHidden(element, hidden) {
   if (element) element.hidden = hidden;
 }
 
+export function initPasswordToggle() {
+  const toggle = document.querySelector(".password-toggle");
+  if (!toggle) return;
+
+  toggle.addEventListener("click", () => {
+    const inputs = document.querySelectorAll(
+      'input[name="password"], input[name="password_confirmation"]'
+    );
+    const shouldShow = inputs[0]?.type === "password";
+    const label = inputs.length === 1 ? "password" : "passwords";
+
+    inputs.forEach((input) => {
+      input.type = shouldShow ? "text" : "password";
+    });
+    toggle.textContent = shouldShow ? "Hide" : "Show";
+    toggle.setAttribute(
+      "aria-label",
+      `${shouldShow ? "Hide" : "Show"} ${label}`
+    );
+  });
+}
+
 export function updateHighlight(items, highlightedIndex) {
   items.forEach((item, index) => {
     item.classList.toggle("is-highlighted", index === highlightedIndex);

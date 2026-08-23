@@ -5,8 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-    secret_key: SecretStr
+    secret_key: SecretStr = SecretStr("")
     database_url: str
+    mailtrap_api_token: SecretStr = SecretStr("")
 
     reset_token_expire_minutes: int = Field(default=60, gt=0)
     mail_server: str = "localhost"

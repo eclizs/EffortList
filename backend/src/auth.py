@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-from typing import Any
 
 from itsdangerous import BadData, URLSafeTimedSerializer
 from pwdlib import PasswordHash
@@ -39,16 +38,19 @@ def decode_password_reset_token(token: str) -> tuple[int, str] | None:
     serializer = URLSafeTimedSerializer(settings.secret_key.get_secret_value())
 
     try:
-        payload: Any = serializer.loads(
+        payload = serializer.loads(
             token,
             salt=_RESET_TOKEN_SALT,
             max_age=settings.reset_token_expire_minutes * 60,
         )
-        user_id = payload["user_id"]
-        fingerprint = payload["fingerprint"]
-    except (BadData, KeyError, TypeError):
+    except BadData:
         return None
 
+    if not isinstance(payload, dict):
+        return None
+
+    user_id = payload.get("user_id")
+    fingerprint = payload.get("fingerprint")
     if (
         not isinstance(user_id, int)
         or user_id <= 0

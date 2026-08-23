@@ -1,26 +1,5 @@
 import { requestPasswordReset, resetPassword } from "../core/api.js";
-import { formatError, setStatus } from "../core/ui.js";
-
-function initPasswordToggle() {
-  const toggle = document.querySelector(".password-toggle");
-  if (!toggle) return;
-
-  toggle.addEventListener("click", () => {
-    const inputs = document.querySelectorAll(
-      'input[name="password"], input[name="password_confirmation"]'
-    );
-    const shouldShow = inputs[0]?.type === "password";
-
-    inputs.forEach((input) => {
-      input.type = shouldShow ? "text" : "password";
-    });
-    toggle.textContent = shouldShow ? "Hide" : "Show";
-    toggle.setAttribute(
-      "aria-label",
-      shouldShow ? "Hide passwords" : "Show passwords"
-    );
-  });
-}
+import { formatError, initPasswordToggle, setStatus } from "../core/ui.js";
 
 function initResetRequestForm() {
   const form = document.getElementById("reset-request-form");

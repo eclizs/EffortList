@@ -60,7 +60,6 @@ export function initEntryActions() {
   const confirmDeleteAllButton = document.getElementById("confirm-delete-all-btn");
   const cancelDeleteAllButton = document.getElementById("cancel-delete-all-btn");
   const dialogStatus = document.getElementById("delete-all-dialog-status");
-  const resultsList = document.getElementById("results-list-delete");
   const deleteBox = document.querySelector(".delete-box");
 
   let debounceTimer;
@@ -75,10 +74,6 @@ export function initEntryActions() {
     duplicate: [],
     invalid: [],
     server_error: [],
-  };
-
-  const deleteAllErrorMessage = (error) => {
-    return formatError(error.detail, "Could not delete all entries.");
   };
 
   const groupFailures = (failures) => {
@@ -441,7 +436,7 @@ export function initEntryActions() {
     } catch (error) {
       setStatus(
         deleteStatus,
-        deleteAllErrorMessage(error),
+        formatError(error.detail, "Could not delete all entries."),
         "err"
       );
     } finally {
@@ -469,7 +464,7 @@ export function initEntryActions() {
 
   document.addEventListener("click", (event) => {
     if (!deleteBox?.contains(event.target)) {
-      closeDropdown(deleteInput, resultsList);
+      closeDropdown(deleteInput, deleteResults);
     }
   });
 }

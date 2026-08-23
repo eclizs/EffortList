@@ -438,11 +438,6 @@
     position: relative;
   }
 
-  .result-list-delete {
-    width: 100%;
-    position: inherit;
-  }
-
   .search-controls {
     display: grid;
     grid-template-columns: 76px minmax(0, 1fr);
@@ -574,15 +569,6 @@
   .entry-word {
     font-size: 0.98rem;
     font-weight: 600;
-  }
-
-  .entry-path {
-    margin-top: 0.2rem;
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.02em;
-    word-break: break-all;
   }
 
   .entry-item.is-empty {

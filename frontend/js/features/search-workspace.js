@@ -16,7 +16,7 @@ async function copyText(text) {
       await navigator.clipboard.writeText(text);
       return true;
     } catch {
-    
+      // Fall through to the legacy copy command.
     }
   }
 
@@ -122,7 +122,7 @@ export function initSearchWorkspace() {
       searchRequestId += 1;
       highlightedIndex = -1;
       searchInput.value = "";
-      if(isNumberInputEnabled()) numberInput.value = "";
+      if (isNumberInputEnabled()) numberInput.value = "";
       closeDropdown(searchInput, resultsList);
       resultsList.replaceChildren();
     }
@@ -167,13 +167,10 @@ export function initSearchWorkspace() {
       event.preventDefault();
       if (highlightedIndex >= 0 && items[highlightedIndex]) {
         chooseWord(items[highlightedIndex].dataset.word);
-      }
-      else if (items.length > 0) {
+      } else if (items.length > 0) {
         highlightedIndex = Math.max(highlightedIndex - 1, 0);
         chooseWord(items[highlightedIndex].dataset.word);
-      }
-      else
-      {
+      } else {
         chooseWord(searchInput.value);
       }
       focusAfterAdding();
@@ -206,11 +203,11 @@ export function initSearchWorkspace() {
   updateNumberInputVisibility();
 
   document.addEventListener("keydown", (event) => {
-    if(event.key === "c" && event.altKey) {
-      clearSearchToggle.checked = clearSearchToggle.checked ? false : true;
+    if (event.key === "c" && event.altKey) {
+      clearSearchToggle.checked = !clearSearchToggle.checked;
     }
   });
-  
+
   document.addEventListener("click", (event) => {
     if (!searchBox?.contains(event.target)) {
       closeDropdown(searchInput, resultsList);

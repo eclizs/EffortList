@@ -1,27 +1,5 @@
 import { authenticate, getCurrentUser } from "../core/api.js";
-import { formatError, setStatus } from "../core/ui.js";
-
-function initPasswordToggle() {
-  const toggle = document.querySelector(".password-toggle");
-  if (!toggle) return;
-
-  toggle.addEventListener("click", () => {
-    const passwordInputs = document.querySelectorAll(
-      'input[name="password"], input[name="password_confirmation"]'
-    );
-    const shouldShow = passwordInputs[0]?.type === "password";
-
-    passwordInputs.forEach((input) => {
-      input.type = shouldShow ? "text" : "password";
-    });
-
-    toggle.textContent = shouldShow ? "Hide" : "Show";
-    toggle.setAttribute(
-      "aria-label",
-      shouldShow ? "Hide password" : "Show password"
-    );
-  });
-}
+import { formatError, initPasswordToggle, setStatus } from "../core/ui.js";
 
 async function redirectAuthenticatedUser() {
   try {

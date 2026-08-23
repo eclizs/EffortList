@@ -48,10 +48,7 @@ bool wordIsValid(char* text)
 
 	regcomp(&regex, pattern, REG_EXTENDED);
 
-	bool result;
-
-	if(regexec(&regex, text, 0, NULL, 0) == 0) result = true;
-	else result = false;
+	bool result = regexec(&regex, text, 0, NULL, 0) == 0;
 
 	regfree(&regex);
 	return result;
@@ -86,14 +83,9 @@ static char setChar(int index)
 	return (index + 'a');
 }
 
-static void toLowerCase(unsigned char* text)
-{
-	for(int i = 0; text[i] != '\0'; i++) text[i] = tolower(text[i]);
-}
-
 TrieNode *createTrieNode()
 {
-	TrieNode *newNode = (TrieNode*)calloc(1,sizeof(TrieNode));
+	TrieNode *newNode = calloc(1, sizeof(*newNode));
 
 	if(newNode == NULL)
 	{
@@ -131,16 +123,14 @@ int insertTrieNode(TrieNode **root, char *signedText)
 		temp = temp->children[index];
 	}
 	
-	if(temp->terminal == true)
+	if(temp->terminal)
 	{
 		free(original);
 		return 409;
 	}
-	else
-	{
-		temp->terminal = true;
-		temp->original = original;
-	}
+
+	temp->terminal = true;
+	temp->original = original;
 	
 	return 201;
 }
@@ -187,21 +177,17 @@ WordList findWords(TrieNode *root, char *signedPrefix) //wrapper function
 
 	unsigned char buffer[MAX_WORD_LENGTH];
 
-	TrieNode *node = NULL;
-	int length;
-	if(strlen(signedPrefix) > 0)
+	TrieNode *node;
+	int length = strlen(signedPrefix);
+	if(length > 0)
 	{
-		length = strlen(signedPrefix);
 		memcpy(buffer, signedPrefix, length);
 		buffer[length] = '\0';
 
 		TrieNode *prefixNode = findPrefixNode(root, signedPrefix);
-		unsigned char *prefix = (unsigned char*)signedPrefix;
-
-		
 		if(prefixNode == NULL) return (WordList){NULL, 0};
 		
-		DEBUG_PRINT("DEBUG: prefix=%s, length=%d\n", prefix, length);
+		DEBUG_PRINT("DEBUG: prefix=%s, length=%d\n", signedPrefix, length);
 
 		node = prefixNode;
 	}
@@ -215,7 +201,7 @@ WordList findWords(TrieNode *root, char *signedPrefix) //wrapper function
 
 	int counter = 0;
 
-	char** entries = (char**)calloc(MAX_WORD_COUNT, sizeof(char*));
+	char** entries = calloc(MAX_WORD_COUNT, sizeof(*entries));
 	findWords_rec(node, buffer, length, entries, &counter);
 	return (WordList)
 	{
@@ -329,25 +315,3 @@ void freeWordList(WordList wordList)
 	}
 	free(wordList.entries);
 }
-
-// int main()
-// {
-// 	TrieNode *root = NULL;
-// 	insertTrieNode(&root, "hello", "greeting");
-// 	printTrieNode(root, "");
-// 	printf("\n");
-
-// 	TrieNode *test = findPrefixNode(root, "hello");
-
-// 	Entry arrWords[10];
-// 	findWords(root, "", arrWords);
-
-// 	for (size_t i = 0; i < 3; i++)
-// 	{
-// 		printf("%s - %s\n", arrWords[i].word, arrWords[i].description);
-// 	}
-	
-// 	printf("%d\n", test->terminal);
-// 	if(test != NULL) printf("test is not null\n");
-// 	if(test->terminal) printf("Found prefix node: %s\n", test->description);
-// }

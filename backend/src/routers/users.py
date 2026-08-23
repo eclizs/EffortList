@@ -62,13 +62,13 @@ async def register(
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered"
+            detail="Email already registered",
         )
 
     user = User(
         email=user_data.email.lower(),
         password_hash=hash_password(user_data.password),
-        created_at=datetime.now(UTC)
+        created_at=datetime.now(UTC),
     )
 
     try:
@@ -83,13 +83,13 @@ async def register(
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered"
+            detail="Email already registered",
         )
     except SQLAlchemyError:
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Could not create user"
+            detail="Could not create user",
         )
 
     request.session.clear()
@@ -109,7 +109,7 @@ async def login(
     if not user or not verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect email or password",
         )
 
     request.session.clear()
@@ -126,7 +126,7 @@ async def request_password_reset(
 ) -> dict[str, str]:
     user = await get_user_by_email(session, reset_request.email)
 
-    if user is not None:
+    if user:
         token = create_password_reset_token(user.id, user.password_hash)
         background_tasks.add_task(
             _deliver_password_reset_email,
@@ -177,8 +177,6 @@ async def confirm_password_reset(
                 detail=_INVALID_RESET_TOKEN,
             )
         await session.commit()
-    except HTTPException:
-        raise
     except SQLAlchemyError:
         await session.rollback()
         raise HTTPException(
@@ -196,14 +194,16 @@ async def read_current_user(current_user: Annotated[User, Depends(get_current_us
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(request: Request, session: DatabaseSession) -> Response:
-    identity = request.session.get("identity")
+async def logout(
+    request: Request,
+    identity: Identity,
+    session: DatabaseSession,
+) -> Response:
+    destroy_trie_node = request.app.state.functions["destroyTrieNode"]
 
-    destroyTrieNode = request.app.state.functions["destroyTrieNode"]
+    async with locked_root(request, identity, session) as root:
+        destroy_trie_node(ctypes.byref(root))
 
-    async with locked_root(request, identity, session) as root:# type: ignore
-        destroyTrieNode(ctypes.byref(root))
-        
     request.session.clear()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

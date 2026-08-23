@@ -1,10 +1,10 @@
 import re
-import ctypes
+
 
 def parse_header(filepath: str) -> list:
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     functions = []
     func_pattern = re.compile(
         r"(\w[\w\s\*]+?)\s+(\w+)\s*\(([^)]*)\)\s*;"
@@ -14,8 +14,7 @@ def parse_header(filepath: str) -> list:
         return_val, func_name, func_param = match.groups()
         return_val = return_val.strip()
         func_param = [p.strip() for p in func_param.split(",") if p.strip()]
-        
-        i = 0
+
         for i, param in enumerate(func_param):
             match = re.fullmatch(r"(.+?)([A-Za-z_]\w*)", param)
 
@@ -28,12 +27,7 @@ def parse_header(filepath: str) -> list:
 
         if return_val.split()[-1] in ("typedef", "struct", "enum"):
             continue
-        
+
         functions.append((func_name, func_param, return_val))
 
     return functions
-
-if __name__ == "__main__":
-    import os
-    path = os.path.abspath(os.path.dirname(__file__))
-    functions = parse_header(os.path.join(path, "../include/trie.h"))
