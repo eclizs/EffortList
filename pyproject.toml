@@ -11,6 +11,8 @@ dependencies = [
     "uvicorn",
     "sqlalchemy",
     "aiosqlite",
+    "psycopg[binary]",
+    "alembic",
     "pwdlib[argon2]",
     "pydantic-settings",
     "email-validator",

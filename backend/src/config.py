@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     mail_timeout_seconds: float = Field(default=10.0, gt=0)
 
     frontend_url: str = "http://localhost:8000"
+    session_cookie_secure: bool = False
 
 
 settings = Settings()  # type: ignore
